@@ -3,6 +3,9 @@ const cloudinary = require('../config/cloudinary');
 
 exports.createItem = async (req, res, next) => {
   try {
+    console.log('Files:', req.files);
+    console.log('Body:', req.body);
+    
     let imageUrl = req.body.imageUrl || null;
     
     // If file is uploaded, use Cloudinary
