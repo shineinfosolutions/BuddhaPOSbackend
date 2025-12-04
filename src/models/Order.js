@@ -14,4 +14,9 @@ const orderSchema = new mongoose.Schema({
   paymentMethod: { type: String, enum: ['cash', 'card', 'upi'], default: 'cash' }
 }, { timestamps: true });
 
+// Clear any cached model
+if (mongoose.models.Order) {
+  delete mongoose.models.Order;
+}
+
 module.exports = mongoose.model('Order', orderSchema);
