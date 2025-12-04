@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
 const cloudinary = require('../config/cloudinary');
+const { buildQueryOptions, buildCompleteQuery } = require('../utils/queryHelper');
 
 exports.createItem = async (req, res, next) => {
   try {
@@ -35,15 +36,44 @@ exports.createItem = async (req, res, next) => {
 
 exports.getAllItems = async (req, res, next) => {
   try {
-    const items = await Category.find();
-    res.json(items);
+    const { page, limit, skip } = buildQueryOptions(req);
+    const query = buildCompleteQuery(req, ['categoryName', 'itemName']);
+    
+    const total = await Category.countDocuments(query);
+    const items = await Category.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      data: items
+    });
   } catch (err) { next(err); }
 };
 
 exports.getItemsByCategory = async (req, res, next) => {
   try {
-    const items = await Category.find({ categoryName: req.params.categoryName });
-    res.json(items);
+    const { page, limit, skip } = buildQueryOptions(req);
+    const query = buildCompleteQuery(req, ['itemName']);
+    query.categoryName = req.params.categoryName;
+    
+    const total = await Category.countDocuments(query);
+    const items = await Category.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      data: items
+    });
   } catch (err) { next(err); }
 };
 

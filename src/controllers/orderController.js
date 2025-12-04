@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const { buildQueryOptions, buildCompleteQuery } = require('../utils/queryHelper');
 
 exports.createOrder = async (req, res, next) => {
   try {
@@ -9,8 +10,27 @@ exports.createOrder = async (req, res, next) => {
 
 exports.getOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find().populate('items.categoryId');
-    res.json(orders);
+    const { page, limit, skip } = buildQueryOptions(req);
+    const query = buildCompleteQuery(req, ['customerName', 'mobileNumber', 'items.name']);
+    
+    // Additional filters
+    if (req.query.status) query.status = req.query.status;
+    if (req.query.paymentMethod) query.paymentMethod = req.query.paymentMethod;
+    
+    const total = await Order.countDocuments(query);
+    const orders = await Order.find(query)
+      .populate('items.categoryId')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      data: orders
+    });
   } catch (error) { next(error); }
 };
 
