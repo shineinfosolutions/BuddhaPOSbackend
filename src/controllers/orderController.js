@@ -1,9 +1,20 @@
 const Order = require('../models/Order');
 const { buildQueryOptions, buildCompleteQuery } = require('../utils/queryHelper');
 
+// Generate unique order ID
+const generateOrderId = () => {
+  const timestamp = Date.now().toString();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `ORD${timestamp.slice(-6)}${random}`;
+};
+
 exports.createOrder = async (req, res, next) => {
   try {
-    const newOrder = await Order.create(req.body);
+    const orderData = {
+      ...req.body,
+      orderId: generateOrderId()
+    };
+    const newOrder = await Order.create(orderData);
     res.status(201).json({ message: 'Order Created', data: newOrder });
   } catch (error) { next(error); }
 };
@@ -11,15 +22,13 @@ exports.createOrder = async (req, res, next) => {
 exports.getOrders = async (req, res, next) => {
   try {
     const { page, limit, skip } = buildQueryOptions(req);
-    const query = buildCompleteQuery(req, ['customerName', 'mobileNumber', 'items.name']);
+    const query = buildCompleteQuery(req, ['customerName', 'customerMobile', 'orderId', 'items.itemName']);
     
     // Additional filters
     if (req.query.status) query.status = req.query.status;
-    if (req.query.paymentMethod) query.paymentMethod = req.query.paymentMethod;
     
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .populate('items.categoryId')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -36,7 +45,7 @@ exports.getOrders = async (req, res, next) => {
 
 exports.getOrderById = async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id).populate('items.categoryId');
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json(order);
   } catch (error) { next(error); }

@@ -1,22 +1,55 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema({
-  customerName: { type: String },
-  mobileNumber: { type: String },
-  items: [{
-    categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-    name: { type: String },
-    quantity: { type: Number },
-    price: { type: Number }
-  }],
-  totalAmount: { type: Number },
-  status: { type: String, enum: ['pending', 'completed', 'cancelled'], default: 'pending' },
-  paymentMethod: { type: String, enum: ['cash', 'card', 'upi'], default: 'cash' }
-}, { timestamps: true });
+// Single Item inside the Order
+const orderItemSchema = new mongoose.Schema({
+  itemName: { type: String },
+  qty: { type: Number, min: 1 },
+  price: { type: Number, min: 0 }
+});
 
-// Clear any cached model
+const orderSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: String,
+      unique: true,
+      trim: true
+    },
+
+    customerName: {
+      type: String,
+      trim: true
+    },
+
+    customerMobile: {
+      type: String
+    },
+
+    items: {
+      type: [orderItemSchema]
+    },
+
+    orderDateTime: {
+      type: Date,
+      default: Date.now
+    },
+
+    totalPrice: {
+      type: Number,
+      min: 0
+    },
+
+    status: {
+      type: String,
+      enum: ["Completed", "Cancelled", "Pending"],
+      default: "Pending"
+    }
+  },
+  { timestamps: true }
+);
+
+// Clear old model (for hot reload)
 if (mongoose.models.Order) {
   delete mongoose.models.Order;
 }
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model("Order", orderSchema);
