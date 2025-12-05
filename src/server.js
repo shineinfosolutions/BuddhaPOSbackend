@@ -36,6 +36,11 @@ app.use('/api/categories', async (req, res, next) => {
   next();
 }, require('./routes/categoryRoutes'));
 
+app.use('/api/items', async (req, res, next) => {
+  await ensureConnection();
+  next();
+}, require('./routes/itemRoutes'));
+
 app.use('/api/orders', async (req, res, next) => {
   await ensureConnection();
   next();
@@ -45,7 +50,8 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Buddha POS Backend API',
     endpoints: {
-      menuItems: '/api/categories',
+      categories: '/api/categories',
+      items: '/api/items',
       orders: '/api/orders'
     }
   });
