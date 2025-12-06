@@ -21,13 +21,22 @@ exports.createOrder = async (req, res, next) => {
 
 exports.getOrders = async (req, res, next) => {
   try {
-    // Simple approach - just get all orders
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const { search } = req.query;
     
-    const total = await Order.countDocuments({});
-    const orders = await Order.find({})
+    const query = search ? {
+      $or: [
+        { orderId: { $regex: search, $options: 'i' } },
+        { customerName: { $regex: search, $options: 'i' } },
+        { customerMobile: { $regex: search, $options: 'i' } },
+        { 'items.itemName': { $regex: search, $options: 'i' } }
+      ]
+    } : {};
+    
+    const total = await Order.countDocuments(query);
+    const orders = await Order.find(query)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
