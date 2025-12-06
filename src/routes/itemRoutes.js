@@ -4,6 +4,7 @@ const upload = require('../middlewares/upload');
 const ctrl = require('../controllers/itemController');
 
 router.post('/', upload, ctrl.createItem);
+router.post('/bulk', ctrl.bulkCreateItems);
 router.get('/', ctrl.getAllItems);
 router.get('/category/:categoryId', ctrl.getItemsByCategory);
 router.get('/:id', ctrl.getItemById);

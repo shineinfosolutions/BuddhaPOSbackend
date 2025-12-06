@@ -33,6 +33,15 @@ exports.createItem = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// Bulk create items
+exports.bulkCreateItems = async (req, res, next) => {
+  try {
+    const items = await Item.insertMany(req.body.items);
+    const populatedItems = await Item.find({ _id: { $in: items.map(i => i._id) } }).populate('categoryId');
+    res.status(201).json({ count: items.length, data: populatedItems });
+  } catch (err) { next(err); }
+};
+
 // Get all items with pagination and search
 exports.getAllItems = async (req, res, next) => {
   try {
